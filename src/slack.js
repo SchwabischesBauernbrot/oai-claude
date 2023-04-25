@@ -3,10 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 const https = require('https');
 const WebSocket = require('ws');
 
-const { TOKEN, COOKIE, TEAM_ID } = require('./config');
 const { readBody, headers, createBaseForm, convertToUnixTime, currentTime, buildPrompt } = require('./utils');
 
-async function sendPromptMessage(prompt) {
+async function sendPromptMessage(config, prompt) {
     const form = createBaseForm();
 
     form.append('ts', convertToUnixTime(new Date()));
@@ -26,7 +25,7 @@ async function sendPromptMessage(prompt) {
         },
     };
 
-    const req = https.request(`https://${TEAM_ID}.slack.com/api/chat.postMessage`, options, async (res) => {
+    const req = https.request(`https://${config.teamId}.slack.com/api/chat.postMessage`, options, async (res) => {
         try {
             const response = await readBody(res, true);
             console.log(response);
@@ -42,7 +41,7 @@ async function sendPromptMessage(prompt) {
     form.pipe(req);
 }
 
-async function sendChatReset() {
+async function sendChatReset(config) {
     const form = createBaseForm();
 
     form.append('command', '/reset');
@@ -58,7 +57,7 @@ async function sendChatReset() {
         },
     };
 
-    const req = https.request(`https://${TEAM_ID}.slack.com/api/chat.command`, options, async (res) => {
+    const req = https.request(`https://${config.teamId}.slack.com/api/chat.command`, options, async (res) => {
         try {
             const response = await readBody(res, true);
             console.log(response);
@@ -74,9 +73,9 @@ async function sendChatReset() {
     form.pipe(req);
 }
 
-async function waitForWebSocketResponse(messages, onData) {
+async function waitForWebSocketResponse(config, messages, onData) {
     return new Promise(async (resolve, reject) => {
-        const websocketURL = `wss://wss-primary.slack.com/?token=${TOKEN}`;
+        const websocketURL = `wss://wss-primary.slack.com/?token=${config.token}`;
 
         const websocket = new WebSocket(websocketURL, {
             headers: headers,
@@ -95,7 +94,7 @@ async function waitForWebSocketResponse(messages, onData) {
         const sendNextPrompt = async () => {
             if (messageIndex < messages.length) {
                 const prompt = buildPrompt(messages[messageIndex]);
-                await sendPromptMessage(prompt);
+                await sendPromptMessage(config, prompt);
                 messageIndex++;
             }
         };

@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const bodyParser = require('body-parser');
-const config = require('./config');
+const config = require('./config.json');
 const slack = require('./slack');
 const yup = require('yup');
 const { splitJsonArray, dataToResponse, buildPrompt } = require("./utils");
@@ -29,12 +29,18 @@ openaiRouter.get("/models", (req, res) => {
     ]);
 });
 
-const parallelQueries = 1;
+const parallelQueries = config.slacks.length;
+const slacks = config.slacks.map((slackConfig) => {
+    return {
+        ...slackConfig,
+        locked: false,
+    };
+});
 const myq = new Queue(parallelQueries, 100);
 
 openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
     try {
-        if (req.token !== config.API_KEY) {
+        if (config.apiKey && req.token !== config.apiKey) {
             res.status(401).json({ error: "Unauthorized" });
             return;
         }
@@ -44,9 +50,6 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             res.status(400).json({ error: "Bad request" });
             return;
         }
-
-        const id = `chatcmpl-${(Math.random().toString(36).slice(2))}`;
-        const created = Math.floor(Date.now() / 1000);
 
         const messagesSplit = splitJsonArray(messages, 12000);
 
@@ -74,8 +77,21 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
         };
 
         const result = await myq.run(async () => {
-            await slack.sendChatReset();
-            return await slack.waitForWebSocketResponse(messagesSplit, onData);
+            let slackConfig = slacks.find((slack) => !slack.locked);
+            if (!slackConfig) {
+                throw new Error('Queue full');
+            }
+            slackConfig.locked = true;
+            try {
+                await slack.sendChatReset(slackConfig);
+                const response = await slack.waitForWebSocketResponse(slackConfig, messagesSplit, onData);
+                slackConfig.locked = false;
+                return response;
+            } catch (error) {
+                slackConfig.locked = false;
+                console.error(error);
+                throw new Error('Slack error');
+            }
         });
 
         if (stream) {

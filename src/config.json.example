@@ -1,0 +1,11 @@
+{
+    "slacks": [
+        {
+            "token": "",
+            "cookie": "",
+            "teamId": "",
+            "claudeId": ""
+        }
+    ],
+    "apiKey": ""
+}
