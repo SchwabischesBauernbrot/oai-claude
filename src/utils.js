@@ -113,6 +113,36 @@ function createBaseForm() {
 // Add the utility functions here
 // e.g. escapePrompt, readBody, preparePrompt, currentTime, headers, convertToUnixTime, createBaseForm
 
+export const dataToResponse = (
+    data,
+    promptTokens,
+    completionTokens,
+    stream = false,
+    reason = null
+) => {
+    const currDate = new Date();
+    const contentData = { content: unescapeWrongEscapes(data), role: 'assistant' };
+    const contentName = stream ? 'delta' : 'message';
+
+    return {
+        choices: [
+            {
+                [contentName]: !!data ? contentData : {},
+                finish_reason: reason,
+                index: 0,
+            },
+        ],
+        created: currDate.getTime(),
+        id: nanoid(),
+        object: 'chat.completion.chunk',
+        usage: {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+        },
+    };
+};
+
 module.exports = {
     buildPrompt,
     readBody,
@@ -122,5 +152,6 @@ module.exports = {
     convertToUnixTime,
     createBaseForm,
     splitJsonArray,
-    wait
+    wait,
+    dataToResponse
 };
