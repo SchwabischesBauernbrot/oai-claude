@@ -113,7 +113,7 @@ function createBaseForm() {
 // Add the utility functions here
 // e.g. escapePrompt, readBody, preparePrompt, currentTime, headers, convertToUnixTime, createBaseForm
 
-export const dataToResponse = (
+const dataToResponse = (
     data,
     promptTokens,
     completionTokens,
@@ -133,7 +133,7 @@ export const dataToResponse = (
             },
         ],
         created: currDate.getTime(),
-        id: nanoid(),
+        id: `chatcmpl-${(Math.random().toString(36).slice(2))}`,
         object: 'chat.completion.chunk',
         usage: {
             prompt_tokens: promptTokens,
