@@ -4,6 +4,7 @@ const config = require('./config');
 const slack = require('./slack');
 const yup = require('yup');
 const { splitJsonArray } = require("./utils");
+const { Queue } = require('async-await-queue');
 
 const messageArraySchema = yup.array().of(
     yup.object().shape({
@@ -28,6 +29,9 @@ openaiRouter.get("/models", (req, res) => {
     ]);
 });
 
+const parallelQueries = 1;
+const myq = new Queue(parallelQueries, 100);
+
 openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
     try {
         if (req.token !== config.API_KEY) {
@@ -46,7 +50,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
 
         const messagesSplit = splitJsonArray(messages, 12000);
 
-        const result = await slack.waitForWebSocketResponse(messagesSplit);
+        const result = await myq.run(() => slack.waitForWebSocketResponse(messagesSplit));
 
         res.json({
             id, created,

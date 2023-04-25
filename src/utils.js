@@ -12,6 +12,8 @@ const wait = (duration) => {
 
 function buildPrompt(messages) {
     prompt = "\n\n" + preparePrompt(messages);
+    return prompt;
+    //do not escape for now
     const escapedPrompt = prompt.replace(/\r?\n|\r/g, '\\n').replace(/"/g, '\\"');
     return escapedPrompt;
 };
