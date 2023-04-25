@@ -58,22 +58,6 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             });
         }
 
-        const generateResponse = (content) => {
-            return {
-                id, created,
-                object: 'chat.completion',
-                model: spoofModelName,
-                choices: [{
-                    message: {
-                        role: 'assistant',
-                        content,
-                    },
-                    finish_reason: 'stop',
-                    index: 0,
-                }]
-            };
-        }
-
         const promptTokens = Math.ceil(buildPrompt(messages).length / 4);
         let completionTokens = 0;
 
@@ -91,7 +75,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
 
         const result = await myq.run(async () => {
             await slack.sendChatReset();
-            await slack.waitForWebSocketResponse(messagesSplit, onData);
+            return await slack.waitForWebSocketResponse(messagesSplit, onData);
         });
 
         if (stream) {
@@ -110,7 +94,13 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             res.write('event: data\n');
             res.write('data: [DONE]\n\n');
         } else {
-            res.json(generateResponse(result));
+            res.json(dataToResponse(
+                result,
+                promptTokens,
+                completionTokens,
+                stream,
+                'stop'
+            ));
         }
     } catch (error) {
         console.error(error);
