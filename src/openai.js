@@ -77,7 +77,7 @@ openaiRouter.get("*", (req, res, next) => {
     }
 });
 openaiRouter.use((req, res) => {
-    logger.warn(`Blocked openai proxy request: ${req.method} ${req.path}`);
+    //logger.warn(`Blocked openai proxy request: ${req.method} ${req.path}`);
     res.status(404).json({ error: "Not found" });
 });
 
