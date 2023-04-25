@@ -121,7 +121,7 @@ const dataToResponse = (
     reason = null
 ) => {
     const currDate = new Date();
-    const contentData = { content: unescapeWrongEscapes(data), role: 'assistant' };
+    const contentData = { content: data, role: 'assistant' };
     const contentName = stream ? 'delta' : 'message';
 
     return {
