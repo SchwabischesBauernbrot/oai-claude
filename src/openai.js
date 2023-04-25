@@ -30,7 +30,7 @@ openaiRouter.get("/models", (req, res) => {
 
 openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
     try {
-        if (req.token !== config.OPENAI_TOKEN) {
+        if (req.token !== config.API_KEY) {
             res.status(401).json({ error: "Unauthorized" });
             return;
         }
