@@ -89,7 +89,10 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             }
         };
 
-        const result = await myq.run(() => slack.waitForWebSocketResponse(messagesSplit, onData));
+        const result = await myq.run(async () => {
+            await slack.sendChatReset();
+            await slack.waitForWebSocketResponse(messagesSplit, onData);
+        });
 
         if (stream) {
             res.write('event: data\n');
