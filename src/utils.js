@@ -1,7 +1,5 @@
 const FormData = require('form-data');
 
-const { TOKEN, COOKIE, TEAM_ID, CLAUDE } = require('./config');
-
 const wait = (duration) => {
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -63,9 +61,11 @@ const currentTime = () => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 };
 
-const headers = {
-    'Cookie': `d=${COOKIE};`,
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/112.0',
+const genHeaders = (config) => {
+    return {
+        'Cookie': `d=${config.cookie};`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/112.0',
+    }
 }
 
 function splitJsonArray(jsonArray, maxLength) {
@@ -101,10 +101,10 @@ function convertToUnixTime(date) {
     return `${unixTime}.xxxxx${randomDigit}`;
 }
 
-function createBaseForm() {
+function createBaseForm(config) {
     const form = new FormData();
-    form.append('token', TOKEN);
-    form.append('channel', `${CLAUDE}`);
+    form.append('token', config.token);
+    form.append('channel', `${config.claudeId}`);
     form.append('_x_mode', 'online');
     form.append('_x_sonic', 'true');
     return form;
@@ -148,7 +148,7 @@ module.exports = {
     readBody,
     preparePrompt,
     currentTime,
-    headers,
+    genHeaders,
     convertToUnixTime,
     createBaseForm,
     splitJsonArray,

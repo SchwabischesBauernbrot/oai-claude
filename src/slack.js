@@ -3,10 +3,11 @@ const { v4: uuidv4 } = require('uuid');
 const https = require('https');
 const WebSocket = require('ws');
 
-const { readBody, headers, createBaseForm, convertToUnixTime, currentTime, buildPrompt } = require('./utils');
+const { readBody, genHeaders, createBaseForm, convertToUnixTime, currentTime, buildPrompt } = require('./utils');
 
 async function sendPromptMessage(config, prompt) {
-    const form = createBaseForm();
+    const form = createBaseForm(config);
+    const headers = genHeaders(config);
 
     form.append('ts', convertToUnixTime(new Date()));
     form.append('type', 'message');
@@ -42,7 +43,8 @@ async function sendPromptMessage(config, prompt) {
 }
 
 async function sendChatReset(config) {
-    const form = createBaseForm();
+    const form = createBaseForm(config);
+    const headers = genHeaders(config);
 
     form.append('command', '/reset');
     form.append('disp', '/reset');
@@ -74,6 +76,8 @@ async function sendChatReset(config) {
 }
 
 async function waitForWebSocketResponse(config, messages, onData) {
+    const headers = genHeaders(config);
+
     return new Promise(async (resolve, reject) => {
         const websocketURL = `wss://wss-primary.slack.com/?token=${config.token}`;
 
