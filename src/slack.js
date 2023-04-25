@@ -74,7 +74,7 @@ async function sendChatReset() {
     form.pipe(req);
 }
 
-async function waitForWebSocketResponse(messages) {
+async function waitForWebSocketResponse(messages, onData) {
     return new Promise(async (resolve, reject) => {
         const websocketURL = `wss://wss-primary.slack.com/?token=${TOKEN}`;
 
@@ -114,8 +114,10 @@ async function waitForWebSocketResponse(messages) {
                             resolve(data.message.text);
                         }
                     } else {
-                        //yield data.message.text;
                         console.log(`${currentTime()} fetched ${data.message.text.length} characters...`);
+                        if (onData) {
+                            onData(data.message.text);
+                        }
                     }
                 }
             } catch (error) {

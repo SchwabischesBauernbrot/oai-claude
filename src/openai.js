@@ -39,7 +39,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             return;
         }
 
-        const { messages } = req.body;
+        const { messages, stream } = req.body;
         if (!messages || !(await messageArraySchema.isValid(messages))) {
             res.status(400).json({ error: "Bad request" });
             return;
@@ -50,21 +50,49 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
 
         const messagesSplit = splitJsonArray(messages, 12000);
 
-        const result = await myq.run(() => slack.waitForWebSocketResponse(messagesSplit));
+        if (stream) {
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                Connection: 'keep-alive',
+            });
+        }
 
-        res.json({
-            id, created,
-            object: 'chat.completion',
-            model: spoofModelName,
-            choices: [{
-                message: {
-                    role: 'assistant',
-                    content: result.trimStart(),
-                },
-                finish_reason: 'stop',
-                index: 0,
-            }]
-        });
+        const generateResponse = (content) => {
+            return {
+                id, created,
+                object: 'chat.completion',
+                model: spoofModelName,
+                choices: [{
+                    message: {
+                        role: 'assistant',
+                        content,
+                    },
+                    finish_reason: 'stop',
+                    index: 0,
+                }]
+            };
+        }
+
+        let currentContent = '';
+        const onData = (newContent) => {
+            if (stream) {
+                const chunk = newContent.slice(currentContent.length);
+                currentContent = newContent;
+                res.write('event: data\n');
+                res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            }
+        };
+
+        const result = await myq.run(() => slack.waitForWebSocketResponse(messagesSplit, onData));
+
+        if (stream) {
+            res.write('event: data\n');
+            res.write(`data: ${generateResponse(currentContent)}\n\n`);
+            res.write('data: [DONE]\n\n');
+        } else {
+            res.json(generateResponse(result));
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error" });
