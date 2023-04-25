@@ -74,13 +74,10 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             };
         }
 
-        let currentContent = '';
         const onData = (newContent) => {
             if (stream) {
-                const chunk = newContent.slice(currentContent.length);
-                currentContent = newContent;
                 res.write('event: data\n');
-                res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+                res.write(`data: ${JSON.stringify(generateResponse(newContent))}\n\n`);
             }
         };
 
@@ -88,7 +85,6 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
 
         if (stream) {
             res.write('event: data\n');
-            res.write(`data: ${generateResponse(currentContent)}\n\n`);
             res.write('data: [DONE]\n\n');
         } else {
             res.json(generateResponse(result));
