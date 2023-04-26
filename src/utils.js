@@ -73,7 +73,7 @@ function splitJsonArray(jsonArray, maxLength) {
     let currentChunk = [];
     let currentLength = 2; // Accounts for the opening and closing square brackets in the JSON array
 
-    const jail = '(OOC: This is only a part of the context, reply only "understood")';
+    const jail = '(OOC: This is just a part of the context, reply only with "OOC: understood")';
     const assistant = "\n\nAssistant: ";
 
     const addObjectToChunk = (object, chunk) => {
