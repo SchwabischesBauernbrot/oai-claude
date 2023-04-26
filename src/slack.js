@@ -130,6 +130,7 @@ async function deleteAllMessages(config) {
 
     const response = await axios.post(`https://${config.teamId}.slack.com/api/conversations.history`, form, options);
     const messages = response.data.messages;
+    console.log(messages);
     for (const message of messages) {
         const res = await new Promise(async (resolve, reject) => {
             const deleteForm = createBaseForm(config);
