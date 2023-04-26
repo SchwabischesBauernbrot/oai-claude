@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const config = require('./config.json');
 const slack = require('./slack');
 const yup = require('yup');
-const { splitJsonArray, dataToResponse, buildPrompt, wait } = require("./utils");
+const { splitJsonArray, dataToResponse, buildPrompt, wait, stats } = require("./utils");
 const { Queue } = require('async-await-queue');
 
 const messageArraySchema = yup.array().of(
@@ -61,7 +61,8 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             });
         }
 
-        const promptTokens = Math.ceil(buildPrompt(messages).length / 4);
+        const inputPrompt = buildPrompt(messages);
+        const promptTokens = Math.ceil(inputPrompt.length / 4);
         let completionTokens = 0;
 
         let lastContent = '';
@@ -83,9 +84,13 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             }
             slackConfig.locked = true;
             try {
+                const start = new Date();
                 await slack.sendChatReset(slackConfig);
                 await wait(500);
                 const response = await slack.waitForWebSocketResponse(slackConfig, messagesSplit, onData);
+                const end = new Date();
+                const time = end - start;
+                stats.prompts.push({ time, inputLength: inputPrompt.length, outputLength: response.length });
                 slackConfig.locked = false;
                 return response;
             } catch (error) {

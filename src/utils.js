@@ -171,6 +171,10 @@ const dataToResponse = (
     };
 };
 
+const stats = {
+    prompts: []
+}
+
 module.exports = {
     buildPrompt,
     readBody,
@@ -181,5 +185,6 @@ module.exports = {
     createBaseForm,
     splitJsonArray,
     wait,
-    dataToResponse
+    dataToResponse,
+    stats,
 };
