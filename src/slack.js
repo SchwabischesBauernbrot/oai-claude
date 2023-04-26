@@ -140,9 +140,48 @@ async function waitForWebSocketResponse(config, messages, onData) {
     });
 }
 
+function deleteAllMessages(config) {
+    const form = createBaseForm(config);
+    const headers = genHeaders(config);
+
+    const requestOptions = {
+        method: 'POST',
+        path: `/api/conversations.history?channel=${config.claudeId}`,
+        headers: {
+            ...headers,
+            ...form.getHeaders(),
+        },
+    };
+
+    const req = https.request(requestOptions, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+        res.on('end', () => {
+            const messages = JSON.parse(data).messages;
+            messages.forEach((message) => {
+                const deleteOptions = {
+                    method: 'POST',
+                    path: '/api/chat.delete',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                const deleteReq = https.request(deleteOptions, (deleteRes) => { });
+                deleteReq.write(JSON.stringify({ channel: channelId, ts: message.ts }));
+                deleteReq.end();
+            });
+        });
+    });
+
+    req.end();
+}
+
 
 module.exports = {
     sendPromptMessage,
     sendChatReset,
     waitForWebSocketResponse,
+    deleteAllMessages,
 };

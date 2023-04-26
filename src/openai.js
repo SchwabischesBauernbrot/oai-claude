@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const config = require('./config.json');
 const slack = require('./slack');
 const yup = require('yup');
-const { splitJsonArray, dataToResponse, buildPrompt } = require("./utils");
+const { splitJsonArray, dataToResponse, buildPrompt, wait } = require("./utils");
 const { Queue } = require('async-await-queue');
 
 const messageArraySchema = yup.array().of(
@@ -84,6 +84,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
             slackConfig.locked = true;
             try {
                 await slack.sendChatReset(slackConfig);
+                await wait(500);
                 const response = await slack.waitForWebSocketResponse(slackConfig, messagesSplit, onData);
                 slackConfig.locked = false;
                 return response;
