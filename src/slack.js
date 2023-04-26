@@ -131,8 +131,8 @@ async function deleteAllMessages(config) {
     const response = await axios.post(`https://${config.teamId}.slack.com/api/conversations.history`, form, options);
     console.log(response);
     const messages = response.data.messages;
-    const messageRemovalPromises = messages.map((message) => {
-        return new Promise(async (resolve, reject) => {
+    for (const message of messages) {
+        console.log(await new Promise(async (resolve, reject) => {
             const deleteForm = createBaseForm(config);
             deleteForm.append('channel', config.claudeId);
             deleteForm.append('ts', message.ts);
@@ -153,10 +153,8 @@ async function deleteAllMessages(config) {
                 console.error(error);
                 resolve(error);
             }
-        });
-    });
-
-    console.log(await Promise.all(messageRemovalPromises));
+        }));
+    }
 }
 
 
