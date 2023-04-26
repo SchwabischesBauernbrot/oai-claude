@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const WebSocket = require('ws');
 
-const { readBody, genHeaders, createBaseForm, convertToUnixTime, currentTime, buildPrompt } = require('./utils');
+const { readBody, genHeaders, createBaseForm, convertToUnixTime, currentTime, buildPrompt, wait } = require('./utils');
 
 async function sendPromptMessage(config, prompt) {
     const form = createBaseForm(config);
