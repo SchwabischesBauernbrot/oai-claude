@@ -109,7 +109,7 @@ async function waitForWebSocketResponse(config, messages, onData) {
             try {
                 const data = JSON.parse(message);
                 if (data.subtype === 'message_changed') {
-                    if (!data.message.text.endsWith("_Typing…_")) {
+                    if (!data.message.text.endsWith("\n\n_Typing…_")) {
                         if (messageIndex < messages.length) {
                             await sendNextPrompt();
                         } else {
@@ -119,8 +119,7 @@ async function waitForWebSocketResponse(config, messages, onData) {
                     } else {
                         console.log(`${currentTime()} fetched ${data.message.text.length} characters...`);
                         if (onData) {
-                            console.log(JSON.stringify(data.message.text));
-                            onData(data.message.text.split('_Typing…_')[0]);
+                            onData(data.message.text.split('\n\n_Typing…_')[0]);
                         }
                     }
                 }
