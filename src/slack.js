@@ -155,12 +155,13 @@ function deleteAllMessages(config) {
         },
     };
 
-    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history?channel=${config.claudeId}`, options, (res) => {
+    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history`, options, (res) => {
         let data = '';
         res.on('data', (chunk) => {
             data += chunk;
         });
         res.on('end', () => {
+            console.log(data);
             const messages = JSON.parse(data).messages;
             messages.forEach((message) => {
                 const deleteReq = https.request(`https://${config.teamId}.slack.com/api/chat.delete`, options, (deleteRes) => { });
