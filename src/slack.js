@@ -114,6 +114,9 @@ async function waitForWebSocketResponse(config, messages, onData) {
                             await sendNextPrompt();
                         } else {
                             websocket.close();
+                            if (onData) {
+                                onData(data.message.text);
+                            }
                             resolve(data.message.text);
                         }
                     } else {
