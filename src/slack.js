@@ -129,7 +129,6 @@ async function deleteAllMessages(config) {
     };
 
     const response = await axios.post(`https://${config.teamId}.slack.com/api/conversations.history`, form, options);
-    console.log(response);
     const messages = response.data.messages;
     for (const message of messages) {
         const res = await new Promise(async (resolve, reject) => {
@@ -147,15 +146,13 @@ async function deleteAllMessages(config) {
 
             try {
                 const deleteResponse = await axios.post(`https://${config.teamId}.slack.com/api/chat.delete`, deleteForm, deleteOptions);
-                console.log(deleteResponse);
                 resolve(deleteResponse);
             } catch (error) {
-                console.error(error);
                 resolve(error);
             }
         });
-        console.log(`Removal: ${res.status}`);
-        await wait(1000); //rate limit
+        console.log(`Removal: ${res.data.error}`);
+        await wait(2000); //rate limit
     }
 }
 
