@@ -155,12 +155,9 @@ function deleteAllMessages(config) {
         },
     };
 
-    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history`, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-            data += chunk;
-        });
-        res.on('end', () => {
+    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history`, options, async (res) => {
+        try {
+            const data = await readBody(res, true);
             console.log(data);
             const messages = JSON.parse(data).messages;
             messages.forEach((message) => {
@@ -168,10 +165,16 @@ function deleteAllMessages(config) {
                 deleteReq.write(JSON.stringify({ channel: config.claudeId, ts: message.ts }));
                 deleteReq.end();
             });
-        });
+        } catch (error) {
+            console.error(error);
+        }
     });
 
-    req.end();
+    req.on('error', (error) => {
+        console.error(error);
+    });
+
+    form.pipe(req);
 }
 
 
