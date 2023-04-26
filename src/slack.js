@@ -119,6 +119,7 @@ async function waitForWebSocketResponse(config, messages, onData) {
                     } else {
                         console.log(`${currentTime()} fetched ${data.message.text.length} characters...`);
                         if (onData) {
+                            console.log(JSON.stringify(data.message.text));
                             onData(data.message.text.split('_Typing…_')[0]);
                         }
                     }
