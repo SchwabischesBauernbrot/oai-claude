@@ -147,16 +147,15 @@ function deleteAllMessages(config) {
     const form = createBaseForm(config);
     const headers = genHeaders(config);
 
-    const requestOptions = {
+    const options = {
         method: 'POST',
-        path: `/api/conversations.history?channel=${config.claudeId}`,
         headers: {
             ...headers,
             ...form.getHeaders(),
         },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history?channel=${config.claudeId}`, options, (res) => {
         let data = '';
         res.on('data', (chunk) => {
             data += chunk;
@@ -164,15 +163,8 @@ function deleteAllMessages(config) {
         res.on('end', () => {
             const messages = JSON.parse(data).messages;
             messages.forEach((message) => {
-                const deleteOptions = {
-                    method: 'POST',
-                    path: '/api/chat.delete',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                };
-                const deleteReq = https.request(deleteOptions, (deleteRes) => { });
-                deleteReq.write(JSON.stringify({ channel: channelId, ts: message.ts }));
+                const deleteReq = https.request(`https://${config.teamId}.slack.com/api/chat.delete`, options, (deleteRes) => { });
+                deleteReq.write(JSON.stringify({ channel: config.claudeId, ts: message.ts }));
                 deleteReq.end();
             });
         });

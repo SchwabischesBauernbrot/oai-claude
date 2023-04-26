@@ -91,6 +91,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
                 const end = new Date();
                 const time = end - start;
                 stats.prompts.push({ time, inputLength: inputPrompt.length, outputLength: response.length });
+                slack.deleteAllMessages(slackConfig);
                 slackConfig.locked = false;
                 return response;
             } catch (error) {
