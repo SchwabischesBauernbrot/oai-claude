@@ -132,7 +132,7 @@ async function deleteAllMessages(config) {
     console.log(response);
     const messages = response.data.messages;
     for (const message of messages) {
-        console.log(await new Promise(async (resolve, reject) => {
+        const res = await new Promise(async (resolve, reject) => {
             const deleteForm = createBaseForm(config);
             deleteForm.append('channel', config.claudeId);
             deleteForm.append('ts', message.ts);
@@ -153,7 +153,9 @@ async function deleteAllMessages(config) {
                 console.error(error);
                 resolve(error);
             }
-        }));
+        });
+        console.log(`Removal: ${res.status}`);
+        await wait(1000); //rate limit
     }
 }
 
