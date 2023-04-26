@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
         uptime: (new Date() - started) / 1000,
         slacks: config.slacks.length || 0,
         prompts: stats.prompts.length || 0,
-        avgTime: stats.prompts.reduce((acc, curr) => acc + curr.time, 0) / stats.prompts.length || 0,
+        avgTime: (stats.prompts.reduce((acc, curr) => acc + curr.time, 0) / stats.prompts.length || 0) / 1000,
         avgInputLength: stats.prompts.reduce((acc, curr) => acc + curr.inputLength, 0) / stats.prompts.length || 0,
         avgOutputLength: stats.prompts.reduce((acc, curr) => acc + curr.outputLength, 0) / stats.prompts.length || 0,
     });
