@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 
-const https = require('https');
+const axios = require('axios');
 const WebSocket = require('ws');
 
 const { readBody, genHeaders, createBaseForm, convertToUnixTime, currentTime, buildPrompt } = require('./utils');
@@ -19,27 +19,14 @@ async function sendPromptMessage(config, prompt) {
     form.append('_x_reason', 'webapp_message_send');
 
     const options = {
-        method: 'POST',
         headers: {
             ...headers,
             ...form.getHeaders(),
         },
     };
 
-    const req = https.request(`https://${config.teamId}.slack.com/api/chat.postMessage`, options, async (res) => {
-        try {
-            const response = await readBody(res, true);
-            console.log(response);
-        } catch (error) {
-            console.error(error);
-        }
-    });
-
-    req.on('error', (error) => {
-        console.error(error);
-    });
-
-    form.pipe(req);
+    const response = await axios.post(`https://${config.teamId}.slack.com/api/chat.postMessage`, form, options);
+    console.log(response);
 }
 
 async function sendChatReset(config) {
@@ -52,27 +39,14 @@ async function sendChatReset(config) {
     form.append('_x_reason', 'executeCommand');
 
     const options = {
-        method: 'POST',
         headers: {
             ...headers,
             ...form.getHeaders(),
         },
     };
 
-    const req = https.request(`https://${config.teamId}.slack.com/api/chat.command`, options, async (res) => {
-        try {
-            const response = await readBody(res, true);
-            console.log(response);
-        } catch (error) {
-            console.error(error);
-        }
-    });
-
-    req.on('error', (error) => {
-        console.error(error);
-    });
-
-    form.pipe(req);
+    const response = await axios.post(`https://${config.teamId}.slack.com/api/chat.command`, form, options);
+    console.log(response);
 }
 
 async function waitForWebSocketResponse(config, messages, onData) {
@@ -143,38 +117,46 @@ async function waitForWebSocketResponse(config, messages, onData) {
     });
 }
 
-function deleteAllMessages(config) {
+async function deleteAllMessages(config) {
     const form = createBaseForm(config);
     const headers = genHeaders(config);
 
     const options = {
-        method: 'POST',
         headers: {
             ...headers,
             ...form.getHeaders(),
         },
     };
 
-    const req = https.request(`https://${config.teamId}.slack.com/api/conversations.history`, options, async (res) => {
-        try {
-            const data = await readBody(res, true);
-            console.log(data);
-            const messages = JSON.parse(data).messages;
-            messages.forEach((message) => {
-                const deleteReq = https.request(`https://${config.teamId}.slack.com/api/chat.delete`, options, (deleteRes) => { });
-                deleteReq.write(JSON.stringify({ channel: config.claudeId, ts: message.ts }));
-                deleteReq.end();
-            });
-        } catch (error) {
-            console.error(error);
-        }
+    const response = await axios.post(`https://${config.teamId}.slack.com/api/conversations.history`, form, options);
+    console.log(response);
+    const messages = response.data.messages;
+    const messageRemovalPromises = messages.map((message) => {
+        return new Promise(async (resolve, reject) => {
+            const deleteForm = createBaseForm(config);
+            deleteForm.append('channel', config.claudeId);
+            deleteForm.append('ts', message.ts);
+            deleteForm.append('_x_reason', 'webapp_message_delete');
+
+            const deleteOptions = {
+                headers: {
+                    ...headers,
+                    ...deleteForm.getHeaders(),
+                },
+            };
+
+            try {
+                const deleteResponse = await axios.post(`https://${config.teamId}.slack.com/api/chat.delete`, deleteForm, deleteOptions);
+                console.log(deleteResponse);
+                resolve(deleteResponse);
+            } catch (error) {
+                console.error(error);
+                resolve(error);
+            }
+        });
     });
 
-    req.on('error', (error) => {
-        console.error(error);
-    });
-
-    form.pipe(req);
+    console.log(await Promise.all(messageRemovalPromises));
 }
 
 
