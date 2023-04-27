@@ -26,7 +26,7 @@ async function sendPromptMessage(config, prompt) {
     };
 
     const response = await axios.post(`https://${config.teamId}.slack.com/api/chat.postMessage`, form, options);
-    console.log(response);
+    // console.log(response);
 }
 
 async function sendChatReset(config) {
@@ -46,7 +46,7 @@ async function sendChatReset(config) {
     };
 
     const response = await axios.post(`https://${config.teamId}.slack.com/api/chat.command`, form, options);
-    console.log(response);
+    // console.log(response);
 }
 
 async function waitForWebSocketResponse(config, messages, onData) {
