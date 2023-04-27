@@ -5,6 +5,7 @@ const slack = require('./slack');
 const yup = require('yup');
 const { splitJsonArray, dataToResponse, buildPrompt, wait, stats } = require("./utils");
 const { Queue } = require('async-await-queue');
+const { encode, decode } = require('html-entities');
 
 const messageArraySchema = yup.array().of(
     yup.object().shape({
@@ -66,7 +67,8 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
         let completionTokens = 0;
 
         let lastContent = '';
-        const onData = (newContent) => {
+        const onData = (newContentEncoded) => {
+            const newContent = decode(newContentEncoded)
             if (stream) {
                 const data = newContent.slice(lastContent.length);
                 lastContent = newContent;
@@ -87,7 +89,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
                 const start = new Date();
                 await slack.sendChatReset(slackConfig);
                 await wait(500);
-                const response = await slack.waitForWebSocketResponse(slackConfig, messagesSplit, onData);
+                const response = decode(await slack.waitForWebSocketResponse(slackConfig, messagesSplit, onData));
                 const end = new Date();
                 const time = end - start;
                 stats.prompts.push({ time, inputLength: inputPrompt.length, outputLength: response.length });
