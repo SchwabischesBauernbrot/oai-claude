@@ -94,6 +94,7 @@ function splitJsonArray(jsonArray, maxLength) {
             currentLength = addObjectToChunk(obj, currentChunk);
         } else {
             const lastObjectInChunk = currentChunk[currentChunk.length - 1];
+            if (!lastObjectInChunk) continue;
             const lastObjectWithJail = appendTextToContent(lastObjectInChunk, ` ${jail}`);
             const lastObjectWithJailLength = JSON.stringify(lastObjectWithJail).length + 1;
 

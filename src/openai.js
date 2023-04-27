@@ -68,7 +68,7 @@ openaiRouter.post("/chat/completions", jsonParser, async (req, res) => {
 
         let lastContent = '';
         const onData = (newContentEncoded) => {
-            const newContent = decode(newContentEncoded)
+            const newContent = decode(newContentEncoded);
             if (stream) {
                 const data = newContent.slice(lastContent.length);
                 lastContent = newContent;
